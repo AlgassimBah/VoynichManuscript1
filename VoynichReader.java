@@ -1,7 +1,7 @@
 /** Project: Voynich Manuscript
  * Purpose Details: Deciphering text
  * Course: IST 242
- * Author: Joseph Oakes
+ * Author: Algassim Bah
  * Date Developed: 12/13/24
  * Last Date Changed: 12/13/24
  * Rev: 12/13/24
@@ -60,6 +60,13 @@ public class VoynichReader {
 
         System.out.println("\nDecrypted Text:");
         System.out.println(decryptedText);
+
+        // Step 5: Perform language-based word analysis
+        Map<String, List<String>> dictionaryTable = loadDictionaryTable();
+        List<String> translatedWords = translateWords(decryptedWords, dictionaryTable);
+
+        System.out.println("\nTranslated Words:");
+        translatedWords.forEach(System.out::println);
     }
 
     // Load ciphertext from a file
@@ -120,4 +127,29 @@ public class VoynichReader {
         }
         return decryptedWords;
     }
+
+    // Load dictionary table for different languages
+    public static Map<String, List<String>> loadDictionaryTable() {
+        Map<String, List<String>> dictionaryTable = new HashMap<>();
+        dictionaryTable.put("ata", Arrays.asList("father", "data"));
+        dictionaryTable.put("ano", Arrays.asList("year", "ring"));
+        dictionaryTable.put("che", Arrays.asList("what", "who"));
+        dictionaryTable.put("thy", Arrays.asList("your", "thy"));
+        dictionaryTable.put("ory", Arrays.asList("story", "history"));
+        return dictionaryTable;
+    }
+
+    // Translate decrypted words using the dictionary table
+    public static List<String> translateWords(List<String> decryptedWords, Map<String, List<String>> dictionaryTable) {
+        List<String> translatedWords = new ArrayList<>();
+        for (String word : decryptedWords) {
+            if (dictionaryTable.containsKey(word)) {
+                translatedWords.add(String.join("/", dictionaryTable.get(word)));
+            } else {
+                translatedWords.add(word); // If no translation, keep the original word
+            }
+        }
+        return translatedWords;
+    }
 }
+
