@@ -12,61 +12,46 @@ import java.util.*;
 
 public class VoynichReader {
     public static void main(String[] args) {
-        // File path for the ciphertext file
-        String filePath = "capture/manuscript.txt";
+        // File paths for the manuscript pages
+        String[] filePaths = {"capture/Manuscript.txt"};
 
-        // Load ciphertext from file
-        String ciphertext = loadCiphertext(filePath);
-        if (ciphertext.isEmpty()) {
-            System.out.println("Error: Ciphertext file is empty or not found.");
+        // Load and process multiple pages of ciphertext
+        StringBuilder fullText = new StringBuilder();
+        System.out.println("Processing Pages:");
+        for (String filePath : filePaths) {
+            System.out.println("Processing: " + filePath);
+            fullText.append(loadCiphertext(filePath)).append(" ");
+        }
+
+        String manuscript = fullText.toString().trim();
+        if (manuscript.isEmpty()) {
+            System.out.println("Error: Manuscript pages are empty or not found.");
             return;
         }
 
-        // Step 1: Clean and split text into words
-        List<String> words = cleanAndSplitText(ciphertext);
-
-        // Step 2: Perform frequency analysis
-        Map<Character, Integer> charFrequency = analyzeCharacterFrequency(words);
-        Map<String, Integer> wordFrequency = analyzeWordFrequency(words);
-
-        // Print character frequency
-        System.out.println("Character Frequency:");
+        // Step 1: Character frequency analysis
+        Map<Character, Integer> charFrequency = analyzeCharacterFrequency(manuscript);
+        System.out.println("\nCharacter Frequency:");
         charFrequency.entrySet()
                 .stream()
                 .sorted((e1, e2) -> e2.getValue() - e1.getValue()) // Sort by frequency
                 .forEach(entry -> System.out.println(entry.getKey() + ": " + entry.getValue()));
 
-        // Print top 10 most common words
-        System.out.println("\nMost Common Words:");
-        wordFrequency.entrySet()
-                .stream()
-                .sorted((e1, e2) -> e2.getValue() - e1.getValue()) // Sort by frequency
-                .limit(10)
-                .forEach(entry -> System.out.println(entry.getKey() + ": " + entry.getValue()));
+        // Step 2: Foreign language frequency analysis
+        String language = "Latin"; // Assume we're using Latin for analysis
+        System.out.println("\nPerforming frequency analysis using: " + language);
+        performFrequencyAnalysis(charFrequency);
 
-        // Step 3: Define a cipher map for decryption
-        Map<Character, Character> cipherMap = new HashMap<>();
-        cipherMap.put('o', 'a');
-        cipherMap.put('e', 'e');
-        cipherMap.put('c', 't');
-        cipherMap.put('h', 'o');
-        cipherMap.put('y', 'n');
-        cipherMap.put('p', 'r');
-        cipherMap.put('.', ' ');
-
-        // Step 4: Decrypt the text
-        List<String> decryptedWords = decryptText(words, cipherMap);
-        String decryptedText = String.join(" ", decryptedWords);
-
-        System.out.println("\nDecrypted Text:");
-        System.out.println(decryptedText);
-
-        // Step 5: Perform language-based word analysis
+        // Step 3: Word look-up and translation
+        System.out.println("\nPerforming word look-up and translation...");
         Map<String, List<String>> dictionaryTable = loadDictionaryTable();
-        List<String> translatedWords = translateWords(decryptedWords, dictionaryTable);
-
-        System.out.println("\nTranslated Words:");
+        List<String> translatedWords = translateWords(cleanAndSplitText(manuscript), dictionaryTable);
+        System.out.println("Translation Status: Complete");
         translatedWords.forEach(System.out::println);
+
+        // Step 4: Shift cipher analysis
+        System.out.println("\nPerforming shift cipher analysis...");
+        performShiftCipher(manuscript, dictionaryTable);
     }
 
     // Load ciphertext from a file
@@ -83,73 +68,75 @@ public class VoynichReader {
         return content.toString().trim();
     }
 
-    // Clean and split text into words
-    public static List<String> cleanAndSplitText(String text) {
-        String cleanedText = text.replaceAll("[^a-zA-Z.\\-]", ""); // Keep letters, periods, and dashes
-        String[] words = cleanedText.split("\\.");
-        return new ArrayList<>(Arrays.asList(words));
-    }
-
     // Perform frequency analysis on characters
-    public static Map<Character, Integer> analyzeCharacterFrequency(List<String> words) {
+    public static Map<Character, Integer> analyzeCharacterFrequency(String text) {
         Map<Character, Integer> frequency = new HashMap<>();
-        for (String word : words) {
-            for (char c : word.toCharArray()) {
+        for (char c : text.toCharArray()) {
+            if (Character.isLetter(c)) {
                 frequency.put(c, frequency.getOrDefault(c, 0) + 1);
             }
         }
         return frequency;
     }
 
-    // Perform frequency analysis on words
-    public static Map<String, Integer> analyzeWordFrequency(List<String> words) {
-        Map<String, Integer> frequency = new HashMap<>();
-        for (String word : words) {
-            frequency.put(word, frequency.getOrDefault(word, 0) + 1);
-        }
-        return frequency;
+    // Perform foreign language frequency analysis
+    public static void performFrequencyAnalysis(Map<Character, Integer> charFrequency) {
+        // Example: Latin language character frequency
+        charFrequency.forEach((character, frequency) -> {
+            // Simulated statistical comparison logic
+            System.out.println(character + ": appears " + frequency + " times");
+        });
     }
 
-    // Decrypt a single word using the cipher map
-    public static String decryptWord(String word, Map<Character, Character> cipherMap) {
-        StringBuilder decrypted = new StringBuilder();
-        for (char c : word.toCharArray()) {
-            decrypted.append(cipherMap.getOrDefault(c, c)); // Use mapped char or original if not in map
-        }
-        return decrypted.toString();
+    // Clean and split text into words
+    public static List<String> cleanAndSplitText(String text) {
+        String cleanedText = text.replaceAll("[^a-zA-Z\\s]", "").toLowerCase(); // Remove non-alphabets
+        return new ArrayList<>(Arrays.asList(cleanedText.split("\\s+")));
     }
 
-    // Decrypt the entire text
-    public static List<String> decryptText(List<String> words, Map<Character, Character> cipherMap) {
-        List<String> decryptedWords = new ArrayList<>();
-        for (String word : words) {
-            decryptedWords.add(decryptWord(word, cipherMap));
-        }
-        return decryptedWords;
-    }
-
-    // Load dictionary table for different languages
+    // Load dictionary table for translation
     public static Map<String, List<String>> loadDictionaryTable() {
         Map<String, List<String>> dictionaryTable = new HashMap<>();
-        dictionaryTable.put("ata", Arrays.asList("father", "data"));
-        dictionaryTable.put("ano", Arrays.asList("year", "ring"));
-        dictionaryTable.put("che", Arrays.asList("what", "who"));
-        dictionaryTable.put("thy", Arrays.asList("your", "thy"));
-        dictionaryTable.put("ory", Arrays.asList("story", "history"));
+        dictionaryTable.put("bread", Arrays.asList("pan", "panis"));
+        dictionaryTable.put("plant", Arrays.asList("planta"));
+        dictionaryTable.put("herb", Arrays.asList("herba"));
         return dictionaryTable;
     }
 
-    // Translate decrypted words using the dictionary table
-    public static List<String> translateWords(List<String> decryptedWords, Map<String, List<String>> dictionaryTable) {
+    // Translate words using the dictionary table
+    public static List<String> translateWords(List<String> words, Map<String, List<String>> dictionaryTable) {
         List<String> translatedWords = new ArrayList<>();
-        for (String word : decryptedWords) {
+        for (String word : words) {
             if (dictionaryTable.containsKey(word)) {
-                translatedWords.add(String.join("/", dictionaryTable.get(word)));
+                translatedWords.add(word + " -> " + String.join("/", dictionaryTable.get(word)));
             } else {
-                translatedWords.add(word); // If no translation, keep the original word
+                translatedWords.add(word + " -> (no match)");
             }
         }
         return translatedWords;
     }
-}
 
+    // Perform shift cipher analysis
+    public static void performShiftCipher(String text, Map<String, List<String>> dictionaryTable) {
+        for (int shift = 1; shift <= 25; shift++) {
+            String shiftedText = shiftText(text, shift);
+            List<String> words = cleanAndSplitText(shiftedText);
+            long matchCount = words.stream().filter(dictionaryTable::containsKey).count();
+            System.out.println("Shift " + shift + ": " + matchCount + " matches found.");
+        }
+    }
+
+    // Shift text by a given number
+    public static String shiftText(String text, int shift) {
+        StringBuilder shifted = new StringBuilder();
+        for (char c : text.toCharArray()) {
+            if (Character.isLetter(c)) {
+                char base = Character.isUpperCase(c) ? 'A' : 'a';
+                shifted.append((char) ((c - base + shift) % 26 + base));
+            } else {
+                shifted.append(c);
+            }
+        }
+        return shifted.toString();
+    }
+}
