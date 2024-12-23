@@ -1,4 +1,4 @@
-/** Project: Voynich Manuscript
+/** /** Project: Voynich Manuscript
  * Purpose Details: Deciphering text
  * Course: IST 242
  * Author: Algassim Bah
